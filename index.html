@@ -467,6 +467,25 @@
     letter-spacing: 0.04em;
   }
   .b-third-wrap { padding: 0; }
+
+  /* Elo-over-time view */
+  .elo-title { font-size: 1.1rem; margin: 0.2rem 0 0.2rem; }
+  .elo-sub { font-size: 0.8rem; color: #8b949e; margin: 0 0 0.8rem; }
+  #elo-chart {
+    width: 100%; height: auto; display: block;
+    background: #0d1117; border: 1px solid #21262d; border-radius: 8px;
+  }
+  .elo-line { cursor: pointer; transition: stroke-opacity 0.1s, stroke-width 0.1s; }
+  #elo-legend {
+    display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 0.8rem;
+  }
+  .elo-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.72rem; cursor: pointer; padding: 1px 3px; border-radius: 4px;
+  }
+  .elo-chip:hover { background: #161b22; }
+  .elo-sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .elo-val { color: #8b949e; }
 </style>
 </head>
 <body>
@@ -485,6 +504,7 @@
   <a href="#groups" id="nav-groups">Groups</a>
   <a href="#games" id="nav-games">All Matches</a>
   <a href="#bracket" id="nav-bracket">Bracket</a>
+  <a href="#elo" id="nav-elo">Elo</a>
   <select id="tz-select" class="tz-select">
     <option value="America/New_York">ET</option>
     <option value="America/Chicago">CT</option>
@@ -610,6 +630,16 @@
   </main>
 </div>
 
+<!-- ═══ Elo view: rating over time ═══ -->
+<div id="elo-view" style="display:none">
+  <main>
+    <h2 class="elo-title">Team Elo rating over time</h2>
+    <p class="elo-sub">Each team starts at its pre-tournament Elo; the rating updates after every played match. Hover a line or legend chip to highlight a team.</p>
+    <svg id="elo-chart"></svg>
+    <div id="elo-legend"></div>
+  </main>
+</div>
+
 <footer>
   Model constants: &alpha; = <code>0.26</code> (ln 1.3), &beta; = <code>0.003</code>,
   home advantage <code>+100 Elo</code> for USA / Mexico / Canada in their own venues.
@@ -624,6 +654,7 @@ const GAMES = [{"match_number": 1, "stage_id": 1, "stage_name": "Group Stage", "
 const META  = {"H_bits": 3.2178, "max_bits": 5.585};
 const KNOWN   = {"1": {"home_goals": 2, "away_goals": 0}, "2": {"home_goals": 2, "away_goals": 1}, "3": {"home_goals": 1, "away_goals": 1}, "4": {"home_goals": 4, "away_goals": 1}, "5": {"home_goals": 1, "away_goals": 1}, "6": {"home_goals": 1, "away_goals": 1}, "7": {"home_goals": 0, "away_goals": 1}, "8": {"home_goals": 2, "away_goals": 0}, "10": {"home_goals": 2, "away_goals": 2}, "11": {"home_goals": 1, "away_goals": 0}, "12": {"home_goals": 5, "away_goals": 1}, "13": {"home_goals": 0, "away_goals": 0}, "14": {"home_goals": 1, "away_goals": 1}, "15": {"home_goals": 1, "away_goals": 1}, "16": {"home_goals": 2, "away_goals": 2}, "17": {"home_goals": 3, "away_goals": 1}, "18": {"home_goals": 1, "away_goals": 4}, "19": {"home_goals": 3, "away_goals": 0}, "20": {"home_goals": 3, "away_goals": 1}, "21": {"home_goals": 1, "away_goals": 1}, "22": {"home_goals": 4, "away_goals": 2}, "23": {"home_goals": 1, "away_goals": 0}, "24": {"home_goals": 1, "away_goals": 3}, "25": {"home_goals": 1, "away_goals": 1}, "26": {"home_goals": 4, "away_goals": 1}, "27": {"home_goals": 6, "away_goals": 0}, "28": {"home_goals": 1, "away_goals": 0}, "29": {"home_goals": 2, "away_goals": 0}, "30": {"home_goals": 0, "away_goals": 1}, "31": {"home_goals": 3, "away_goals": 0}, "32": {"home_goals": 0, "away_goals": 1}, "33": {"home_goals": 5, "away_goals": 1}, "34": {"home_goals": 2, "away_goals": 1}, "36": {"home_goals": 0, "away_goals": 4}, "37": {"home_goals": 4, "away_goals": 0}, "38": {"home_goals": 0, "away_goals": 0}, "40": {"home_goals": 1, "away_goals": 3}, "9": {"home_goals": 7, "away_goals": 1}, "35": {"home_goals": 0, "away_goals": 0}, "39": {"home_goals": 2, "away_goals": 2}, "41": {"home_goals": 2, "away_goals": 0}, "42": {"home_goals": 3, "away_goals": 0}, "43": {"home_goals": 3, "away_goals": 2}, "44": {"home_goals": 1, "away_goals": 2}, "45": {"home_goals": 5, "away_goals": 0}, "46": {"home_goals": 0, "away_goals": 0}, "47": {"home_goals": 0, "away_goals": 1}, "48": {"home_goals": 1, "away_goals": 0}, "49": {"home_goals": 2, "away_goals": 1}, "50": {"home_goals": 3, "away_goals": 1}, "52": {"home_goals": 4, "away_goals": 2}, "51": {"home_goals": 0, "away_goals": 3}, "53": {"home_goals": 0, "away_goals": 3}, "54": {"home_goals": 1, "away_goals": 0}, "56": {"home_goals": 2, "away_goals": 1}, "55": {"home_goals": 0, "away_goals": 2}, "58": {"home_goals": 1, "away_goals": 3}, "57": {"home_goals": 1, "away_goals": 1}, "59": {"home_goals": 3, "away_goals": 2}, "60": {"home_goals": 0, "away_goals": 0}, "61": {"home_goals": 1, "away_goals": 4}, "62": {"home_goals": 5, "away_goals": 0}, "64": {"home_goals": 0, "away_goals": 1}, "63": {"home_goals": 0, "away_goals": 0}, "66": {"home_goals": 1, "away_goals": 5}, "65": {"home_goals": 1, "away_goals": 1}, "67": {"home_goals": 0, "away_goals": 2}, "68": {"home_goals": 2, "away_goals": 1}, "69": {"home_goals": 0, "away_goals": 0}, "70": {"home_goals": 3, "away_goals": 1}, "72": {"home_goals": 1, "away_goals": 3}, "71": {"home_goals": 3, "away_goals": 3}};    // {match_number_str: {home_goals, away_goals, ...}}
 const BRACKET = {"73": {"home_top": [{"code": "RSA", "name": "South Africa", "prob": 1.0}], "away_top": [{"code": "CAN", "name": "Canada", "prob": 1.0}], "winner_top": [{"code": "CAN", "name": "Canada", "prob": 0.657}, {"code": "RSA", "name": "South Africa", "prob": 0.343}]}, "74": {"home_top": [{"code": "GER", "name": "Germany", "prob": 1.0}], "away_top": [{"code": "PAR", "name": "Paraguay", "prob": 1.0}], "winner_top": [{"code": "GER", "name": "Germany", "prob": 0.7}, {"code": "PAR", "name": "Paraguay", "prob": 0.3}]}, "75": {"home_top": [{"code": "NED", "name": "Netherlands", "prob": 1.0}], "away_top": [{"code": "MAR", "name": "Morocco", "prob": 1.0}], "winner_top": [{"code": "NED", "name": "Netherlands", "prob": 0.62}, {"code": "MAR", "name": "Morocco", "prob": 0.38}]}, "76": {"home_top": [{"code": "BRA", "name": "Brazil", "prob": 1.0}], "away_top": [{"code": "JPN", "name": "Japan", "prob": 1.0}], "winner_top": [{"code": "BRA", "name": "Brazil", "prob": 0.718}, {"code": "JPN", "name": "Japan", "prob": 0.282}]}, "77": {"home_top": [{"code": "FRA", "name": "France", "prob": 1.0}], "away_top": [{"code": "SWE", "name": "Sweden", "prob": 1.0}], "winner_top": [{"code": "FRA", "name": "France", "prob": 0.852}, {"code": "SWE", "name": "Sweden", "prob": 0.148}]}, "78": {"home_top": [{"code": "CIV", "name": "C\u00f4te d'Ivoire", "prob": 1.0}], "away_top": [{"code": "NOR", "name": "Norway", "prob": 1.0}], "winner_top": [{"code": "NOR", "name": "Norway", "prob": 0.741}, {"code": "CIV", "name": "C\u00f4te d'Ivoire", "prob": 0.259}]}, "79": {"home_top": [{"code": "MEX", "name": "Mexico", "prob": 1.0}], "away_top": [{"code": "ECU", "name": "Ecuador", "prob": 1.0}], "winner_top": [{"code": "MEX", "name": "Mexico", "prob": 0.655}, {"code": "ECU", "name": "Ecuador", "prob": 0.345}]}, "80": {"home_top": [{"code": "ENG", "name": "England", "prob": 1.0}], "away_top": [{"code": "COD", "name": "DR Congo", "prob": 1.0}], "winner_top": [{"code": "ENG", "name": "England", "prob": 0.888}, {"code": "COD", "name": "DR Congo", "prob": 0.112}]}, "81": {"home_top": [{"code": "USA", "name": "USA", "prob": 1.0}], "away_top": [{"code": "BIH", "name": "Bosnia and Herzegovina", "prob": 1.0}], "winner_top": [{"code": "USA", "name": "USA", "prob": 0.828}, {"code": "BIH", "name": "Bosnia and Herzegovina", "prob": 0.172}]}, "82": {"home_top": [{"code": "BEL", "name": "Belgium", "prob": 1.0}], "away_top": [{"code": "SEN", "name": "Senegal", "prob": 1.0}], "winner_top": [{"code": "BEL", "name": "Belgium", "prob": 0.541}, {"code": "SEN", "name": "Senegal", "prob": 0.459}]}, "83": {"home_top": [{"code": "POR", "name": "Portugal", "prob": 1.0}], "away_top": [{"code": "CRO", "name": "Croatia", "prob": 1.0}], "winner_top": [{"code": "POR", "name": "Portugal", "prob": 0.625}, {"code": "CRO", "name": "Croatia", "prob": 0.375}]}, "84": {"home_top": [{"code": "ESP", "name": "Spain", "prob": 1.0}], "away_top": [{"code": "AUT", "name": "Austria", "prob": 1.0}], "winner_top": [{"code": "ESP", "name": "Spain", "prob": 0.87}, {"code": "AUT", "name": "Austria", "prob": 0.13}]}, "85": {"home_top": [{"code": "SUI", "name": "Switzerland", "prob": 1.0}], "away_top": [{"code": "ALG", "name": "Algeria", "prob": 1.0}], "winner_top": [{"code": "SUI", "name": "Switzerland", "prob": 0.646}, {"code": "ALG", "name": "Algeria", "prob": 0.354}]}, "86": {"home_top": [{"code": "ARG", "name": "Argentina", "prob": 1.0}], "away_top": [{"code": "CPV", "name": "Cabo Verde", "prob": 1.0}], "winner_top": [{"code": "ARG", "name": "Argentina", "prob": 0.979}, {"code": "CPV", "name": "Cabo Verde", "prob": 0.021}]}, "87": {"home_top": [{"code": "COL", "name": "Colombia", "prob": 1.0}], "away_top": [{"code": "GHA", "name": "Ghana", "prob": 1.0}], "winner_top": [{"code": "COL", "name": "Colombia", "prob": 0.886}, {"code": "GHA", "name": "Ghana", "prob": 0.114}]}, "88": {"home_top": [{"code": "AUS", "name": "Australia", "prob": 1.0}], "away_top": [{"code": "EGY", "name": "Egypt", "prob": 1.0}], "winner_top": [{"code": "EGY", "name": "Egypt", "prob": 0.504}, {"code": "AUS", "name": "Australia", "prob": 0.496}]}, "89": {"home_top": [{"code": "CAN", "name": "Canada", "prob": 0.657}, {"code": "RSA", "name": "South Africa", "prob": 0.343}], "away_top": [{"code": "NED", "name": "Netherlands", "prob": 0.62}, {"code": "MAR", "name": "Morocco", "prob": 0.38}], "winner_top": [{"code": "NED", "name": "Netherlands", "prob": 0.506}, {"code": "MAR", "name": "Morocco", "prob": 0.275}, {"code": "CAN", "name": "Canada", "prob": 0.177}, {"code": "RSA", "name": "South Africa", "prob": 0.042}]}, "90": {"home_top": [{"code": "GER", "name": "Germany", "prob": 0.7}, {"code": "PAR", "name": "Paraguay", "prob": 0.3}], "away_top": [{"code": "FRA", "name": "France", "prob": 0.852}, {"code": "SWE", "name": "Sweden", "prob": 0.148}], "winner_top": [{"code": "FRA", "name": "France", "prob": 0.587}, {"code": "GER", "name": "Germany", "prob": 0.298}, {"code": "PAR", "name": "Paraguay", "prob": 0.083}, {"code": "SWE", "name": "Sweden", "prob": 0.032}]}, "91": {"home_top": [{"code": "BRA", "name": "Brazil", "prob": 0.718}, {"code": "JPN", "name": "Japan", "prob": 0.282}], "away_top": [{"code": "NOR", "name": "Norway", "prob": 0.741}, {"code": "CIV", "name": "C\u00f4te d'Ivoire", "prob": 0.259}], "winner_top": [{"code": "BRA", "name": "Brazil", "prob": 0.457}, {"code": "NOR", "name": "Norway", "prob": 0.36}, {"code": "JPN", "name": "Japan", "prob": 0.117}, {"code": "CIV", "name": "C\u00f4te d'Ivoire", "prob": 0.066}]}, "92": {"home_top": [{"code": "MEX", "name": "Mexico", "prob": 0.655}, {"code": "ECU", "name": "Ecuador", "prob": 0.345}], "away_top": [{"code": "ENG", "name": "England", "prob": 0.888}, {"code": "COD", "name": "DR Congo", "prob": 0.112}], "winner_top": [{"code": "ENG", "name": "England", "prob": 0.547}, {"code": "MEX", "name": "Mexico", "prob": 0.322}, {"code": "ECU", "name": "Ecuador", "prob": 0.113}, {"code": "COD", "name": "DR Congo", "prob": 0.018}]}, "93": {"home_top": [{"code": "POR", "name": "Portugal", "prob": 0.625}, {"code": "CRO", "name": "Croatia", "prob": 0.375}], "away_top": [{"code": "ESP", "name": "Spain", "prob": 0.87}, {"code": "AUT", "name": "Austria", "prob": 0.13}], "winner_top": [{"code": "ESP", "name": "Spain", "prob": 0.632}, {"code": "POR", "name": "Portugal", "prob": 0.236}, {"code": "CRO", "name": "Croatia", "prob": 0.099}, {"code": "AUT", "name": "Austria", "prob": 0.033}]}, "94": {"home_top": [{"code": "USA", "name": "USA", "prob": 0.828}, {"code": "BIH", "name": "Bosnia and Herzegovina", "prob": 0.172}], "away_top": [{"code": "BEL", "name": "Belgium", "prob": 0.541}, {"code": "SEN", "name": "Senegal", "prob": 0.459}], "winner_top": [{"code": "USA", "name": "USA", "prob": 0.501}, {"code": "BEL", "name": "Belgium", "prob": 0.271}, {"code": "SEN", "name": "Senegal", "prob": 0.19}, {"code": "BIH", "name": "Bosnia and Herzegovina", "prob": 0.038}]}, "95": {"home_top": [{"code": "ARG", "name": "Argentina", "prob": 0.979}, {"code": "CPV", "name": "Cabo Verde", "prob": 0.021}], "away_top": [{"code": "EGY", "name": "Egypt", "prob": 0.504}, {"code": "AUS", "name": "Australia", "prob": 0.496}], "winner_top": [{"code": "ARG", "name": "Argentina", "prob": 0.909}, {"code": "EGY", "name": "Egypt", "prob": 0.047}, {"code": "AUS", "name": "Australia", "prob": 0.039}, {"code": "CPV", "name": "Cabo Verde", "prob": 0.005}]}, "96": {"home_top": [{"code": "SUI", "name": "Switzerland", "prob": 0.646}, {"code": "ALG", "name": "Algeria", "prob": 0.354}], "away_top": [{"code": "COL", "name": "Colombia", "prob": 0.886}, {"code": "GHA", "name": "Ghana", "prob": 0.114}], "winner_top": [{"code": "COL", "name": "Colombia", "prob": 0.577}, {"code": "SUI", "name": "Switzerland", "prob": 0.285}, {"code": "ALG", "name": "Algeria", "prob": 0.106}, {"code": "GHA", "name": "Ghana", "prob": 0.032}]}, "97": {"home_top": [{"code": "NED", "name": "Netherlands", "prob": 0.506}, {"code": "MAR", "name": "Morocco", "prob": 0.275}, {"code": "CAN", "name": "Canada", "prob": 0.177}, {"code": "RSA", "name": "South Africa", "prob": 0.042}], "away_top": [{"code": "FRA", "name": "France", "prob": 0.587}, {"code": "GER", "name": "Germany", "prob": 0.298}, {"code": "PAR", "name": "Paraguay", "prob": 0.083}, {"code": "SWE", "name": "Sweden", "prob": 0.032}], "winner_top": [{"code": "FRA", "name": "France", "prob": 0.446}, {"code": "NED", "name": "Netherlands", "prob": 0.196}, {"code": "GER", "name": "Germany", "prob": 0.183}, {"code": "MAR", "name": "Morocco", "prob": 0.09}]}, "98": {"home_top": [{"code": "ESP", "name": "Spain", "prob": 0.632}, {"code": "POR", "name": "Portugal", "prob": 0.236}, {"code": "CRO", "name": "Croatia", "prob": 0.099}, {"code": "AUT", "name": "Austria", "prob": 0.033}], "away_top": [{"code": "USA", "name": "USA", "prob": 0.501}, {"code": "BEL", "name": "Belgium", "prob": 0.271}, {"code": "SEN", "name": "Senegal", "prob": 0.19}, {"code": "BIH", "name": "Bosnia and Herzegovina", "prob": 0.038}], "winner_top": [{"code": "ESP", "name": "Spain", "prob": 0.508}, {"code": "USA", "name": "USA", "prob": 0.168}, {"code": "POR", "name": "Portugal", "prob": 0.145}, {"code": "BEL", "name": "Belgium", "prob": 0.082}]}, "99": {"home_top": [{"code": "BRA", "name": "Brazil", "prob": 0.457}, {"code": "NOR", "name": "Norway", "prob": 0.36}, {"code": "JPN", "name": "Japan", "prob": 0.117}, {"code": "CIV", "name": "C\u00f4te d'Ivoire", "prob": 0.066}], "away_top": [{"code": "ENG", "name": "England", "prob": 0.547}, {"code": "MEX", "name": "Mexico", "prob": 0.322}, {"code": "ECU", "name": "Ecuador", "prob": 0.113}, {"code": "COD", "name": "DR Congo", "prob": 0.018}], "winner_top": [{"code": "ENG", "name": "England", "prob": 0.34}, {"code": "BRA", "name": "Brazil", "prob": 0.266}, {"code": "NOR", "name": "Norway", "prob": 0.17}, {"code": "MEX", "name": "Mexico", "prob": 0.123}]}, "100": {"home_top": [{"code": "ARG", "name": "Argentina", "prob": 0.909}, {"code": "EGY", "name": "Egypt", "prob": 0.047}, {"code": "AUS", "name": "Australia", "prob": 0.039}, {"code": "CPV", "name": "Cabo Verde", "prob": 0.005}], "away_top": [{"code": "COL", "name": "Colombia", "prob": 0.577}, {"code": "SUI", "name": "Switzerland", "prob": 0.285}, {"code": "ALG", "name": "Algeria", "prob": 0.106}, {"code": "GHA", "name": "Ghana", "prob": 0.032}], "winner_top": [{"code": "ARG", "name": "Argentina", "prob": 0.699}, {"code": "COL", "name": "Colombia", "prob": 0.198}, {"code": "SUI", "name": "Switzerland", "prob": 0.067}, {"code": "ALG", "name": "Algeria", "prob": 0.012}]}, "101": {"home_top": [{"code": "FRA", "name": "France", "prob": 0.446}, {"code": "NED", "name": "Netherlands", "prob": 0.196}, {"code": "GER", "name": "Germany", "prob": 0.183}, {"code": "MAR", "name": "Morocco", "prob": 0.09}], "away_top": [{"code": "ESP", "name": "Spain", "prob": 0.508}, {"code": "USA", "name": "USA", "prob": 0.168}, {"code": "POR", "name": "Portugal", "prob": 0.145}, {"code": "BEL", "name": "Belgium", "prob": 0.082}], "winner_top": [{"code": "ESP", "name": "Spain", "prob": 0.32}, {"code": "FRA", "name": "France", "prob": 0.28}, {"code": "NED", "name": "Netherlands", "prob": 0.089}, {"code": "GER", "name": "Germany", "prob": 0.078}]}, "102": {"home_top": [{"code": "ENG", "name": "England", "prob": 0.34}, {"code": "BRA", "name": "Brazil", "prob": 0.266}, {"code": "NOR", "name": "Norway", "prob": 0.17}, {"code": "MEX", "name": "Mexico", "prob": 0.123}], "away_top": [{"code": "ARG", "name": "Argentina", "prob": 0.699}, {"code": "COL", "name": "Colombia", "prob": 0.198}, {"code": "SUI", "name": "Switzerland", "prob": 0.067}, {"code": "ALG", "name": "Algeria", "prob": 0.012}], "winner_top": [{"code": "ARG", "name": "Argentina", "prob": 0.468}, {"code": "ENG", "name": "England", "prob": 0.168}, {"code": "BRA", "name": "Brazil", "prob": 0.116}, {"code": "COL", "name": "Colombia", "prob": 0.091}]}, "104": {"home_top": [{"code": "ESP", "name": "Spain", "prob": 0.32}, {"code": "FRA", "name": "France", "prob": 0.28}, {"code": "NED", "name": "Netherlands", "prob": 0.089}, {"code": "GER", "name": "Germany", "prob": 0.078}], "away_top": [{"code": "ARG", "name": "Argentina", "prob": 0.468}, {"code": "ENG", "name": "England", "prob": 0.168}, {"code": "BRA", "name": "Brazil", "prob": 0.116}, {"code": "COL", "name": "Colombia", "prob": 0.091}], "winner_top": [{"code": "ARG", "name": "Argentina", "prob": 0.298}, {"code": "ESP", "name": "Spain", "prob": 0.176}, {"code": "FRA", "name": "France", "prob": 0.157}, {"code": "ENG", "name": "England", "prob": 0.084}]}};  // {match_number_str: {home_top, away_top, winner_top}}
+const ELO_HISTORY = {"MEX": {"name": "Mexico", "group": "A", "pts": [["2026-06-11", 1860.2], ["2026-06-11", 1867.9], ["2026-06-18", 1881.9], ["2026-06-24", 1892.8]]}, "RSA": {"name": "South Africa", "group": "A", "pts": [["2026-06-11", 1672.3], ["2026-06-11", 1664.6], ["2026-06-18", 1671.3], ["2026-06-24", 1698.3]]}, "KOR": {"name": "South Korea", "group": "A", "pts": [["2026-06-11", 1763.5], ["2026-06-11", 1784.6], ["2026-06-18", 1770.6], ["2026-06-24", 1743.5]]}, "CZE": {"name": "Czechia", "group": "A", "pts": [["2026-06-11", 1778.8], ["2026-06-11", 1757.7], ["2026-06-18", 1751.1], ["2026-06-24", 1740.1]]}, "CAN": {"name": "Canada", "group": "B", "pts": [["2026-06-11", 1814.7], ["2026-06-12", 1806.9], ["2026-06-18", 1812.1], ["2026-06-24", 1797.1]]}, "BIH": {"name": "Bosnia and Herzegovina", "group": "B", "pts": [["2026-06-11", 1704.3], ["2026-06-12", 1712.1], ["2026-06-18", 1702.9], ["2026-06-24", 1713.1]]}, "QAT": {"name": "Qatar", "group": "B", "pts": [["2026-06-11", 1548.3], ["2026-06-13", 1566.3], ["2026-06-18", 1561.1], ["2026-06-24", 1550.9]]}, "SUI": {"name": "Switzerland", "group": "B", "pts": [["2026-06-11", 1890.1], ["2026-06-13", 1872.1], ["2026-06-18", 1881.3], ["2026-06-24", 1896.3]]}, "BRA": {"name": "Brazil", "group": "C", "pts": [["2026-06-11", 2004.6], ["2026-06-13", 1994.4], ["2026-06-19", 1995.9], ["2026-06-24", 2003.5]]}, "MAR": {"name": "Morocco", "group": "C", "pts": [["2026-06-11", 1855.0], ["2026-06-13", 1865.2], ["2026-06-19", 1882.2], ["2026-06-24", 1886.5]]}, "HAI": {"name": "Haiti", "group": "C", "pts": [["2026-06-11", 1626.5], ["2026-06-13", 1619.0], ["2026-06-19", 1617.5], ["2026-06-24", 1613.2]]}, "SCO": {"name": "Scotland", "group": "C", "pts": [["2026-06-11", 1816.6], ["2026-06-13", 1824.1], ["2026-06-19", 1807.1], ["2026-06-24", 1799.5]]}, "USA": {"name": "USA", "group": "D", "pts": [["2026-06-11", 1808.3], ["2026-06-12", 1831.8], ["2026-06-19", 1849.3], ["2026-06-25", 1829.6]]}, "PAR": {"name": "Paraguay", "group": "D", "pts": [["2026-06-11", 1856.2], ["2026-06-12", 1832.7], ["2026-06-20", 1855.9], ["2026-06-25", 1850.4]]}, "AUS": {"name": "Australia", "group": "D", "pts": [["2026-06-11", 1768.2], ["2026-06-14", 1797.7], ["2026-06-19", 1780.2], ["2026-06-25", 1785.6]]}, "TUR": {"name": "T\u00fcrkiye", "group": "D", "pts": [["2026-06-11", 1905.5], ["2026-06-14", 1876.0], ["2026-06-20", 1852.9], ["2026-06-25", 1872.6]]}, "GER": {"name": "Germany", "group": "E", "pts": [["2026-06-11", 1975.8], ["2026-06-14", 1978.2], ["2026-06-20", 1987.0], ["2026-06-25", 1959.4]]}, "CUR": {"name": "Cura\u00e7ao", "group": "E", "pts": [["2026-06-11", 1650.0], ["2026-06-14", 1647.6], ["2026-06-20", 1662.7], ["2026-06-25", 1652.3]]}, "CIV": {"name": "C\u00f4te d'Ivoire", "group": "E", "pts": [["2026-06-11", 1781.1], ["2026-06-14", 1810.9], ["2026-06-20", 1802.2], ["2026-06-25", 1812.6]]}, "ECU": {"name": "Ecuador", "group": "E", "pts": [["2026-06-11", 1924.4], ["2026-06-14", 1894.6], ["2026-06-20", 1879.5], ["2026-06-25", 1907.1]]}, "NED": {"name": "Netherlands", "group": "F", "pts": [["2026-06-11", 1948.3], ["2026-06-14", 1943.0], ["2026-06-20", 1953.4], ["2026-06-25", 1957.1]]}, "JPN": {"name": "Japan", "group": "F", "pts": [["2026-06-11", 1874.7], ["2026-06-14", 1880.0], ["2026-06-21", 1887.0], ["2026-06-25", 1880.3]]}, "SWE": {"name": "Sweden", "group": "F", "pts": [["2026-06-11", 1790.8], ["2026-06-14", 1803.8], ["2026-06-20", 1793.4], ["2026-06-25", 1800.0]]}, "TUN": {"name": "Tunisia", "group": "F", "pts": [["2026-06-11", 1692.1], ["2026-06-14", 1679.1], ["2026-06-21", 1672.1], ["2026-06-25", 1668.4]]}, "BEL": {"name": "Belgium", "group": "G", "pts": [["2026-06-11", 1907.1], ["2026-06-15", 1897.3], ["2026-06-21", 1885.9], ["2026-06-26", 1890.6]]}, "EGY": {"name": "Egypt", "group": "G", "pts": [["2026-06-11", 1763.8], ["2026-06-15", 1773.6], ["2026-06-21", 1784.6], ["2026-06-26", 1781.3]]}, "IRN": {"name": "IR Iran", "group": "G", "pts": [["2026-06-11", 1734.1], ["2026-06-15", 1727.2], ["2026-06-21", 1738.6], ["2026-06-26", 1741.9]]}, "NZL": {"name": "New Zealand", "group": "G", "pts": [["2026-06-11", 1636.9], ["2026-06-15", 1643.8], ["2026-06-21", 1632.8], ["2026-06-26", 1628.1]]}, "ESP": {"name": "Spain", "group": "H", "pts": [["2026-06-11", 2083.6], ["2026-06-15", 2064.7], ["2026-06-21", 2065.8], ["2026-06-26", 2074.2]]}, "CPV": {"name": "Cabo Verde", "group": "H", "pts": [["2026-06-11", 1625.9], ["2026-06-15", 1644.8], ["2026-06-21", 1660.5], ["2026-06-26", 1659.9]]}, "KSA": {"name": "Saudi Arabia", "group": "H", "pts": [["2026-06-11", 1636.5], ["2026-06-15", 1653.0], ["2026-06-21", 1651.9], ["2026-06-26", 1652.6]]}, "URU": {"name": "Uruguay", "group": "H", "pts": [["2026-06-11", 1923.8], ["2026-06-15", 1907.3], ["2026-06-21", 1891.6], ["2026-06-26", 1883.2]]}, "FRA": {"name": "France", "group": "I", "pts": [["2026-06-11", 2018.8], ["2026-06-16", 2029.9], ["2026-06-22", 2031.3], ["2026-06-26", 2046.3]]}, "SEN": {"name": "Senegal", "group": "I", "pts": [["2026-06-11", 1890.3], ["2026-06-16", 1879.2], ["2026-06-22", 1864.1], ["2026-06-26", 1870.5]]}, "IRQ": {"name": "Iraq", "group": "I", "pts": [["2026-06-11", 1655.8], ["2026-06-16", 1652.4], ["2026-06-22", 1650.9], ["2026-06-26", 1644.5]]}, "NOR": {"name": "Norway", "group": "I", "pts": [["2026-06-11", 1943.5], ["2026-06-16", 1946.9], ["2026-06-22", 1962.1], ["2026-06-26", 1947.1]]}, "ARG": {"name": "Argentina", "group": "J", "pts": [["2026-06-11", 2068.6], ["2026-06-16", 2072.7], ["2026-06-22", 2078.4], ["2026-06-27", 2079.0]]}, "ALG": {"name": "Algeria", "group": "J", "pts": [["2026-06-11", 1799.7], ["2026-06-16", 1795.6], ["2026-06-22", 1805.6], ["2026-06-27", 1808.1]]}, "AUT": {"name": "Austria", "group": "J", "pts": [["2026-06-11", 1836.8], ["2026-06-17", 1844.9], ["2026-06-22", 1839.2], ["2026-06-27", 1836.8]]}, "JOR": {"name": "Jordan", "group": "J", "pts": [["2026-06-11", 1657.9], ["2026-06-17", 1649.8], ["2026-06-22", 1639.8], ["2026-06-27", 1639.2]]}, "POR": {"name": "Portugal", "group": "K", "pts": [["2026-06-11", 1972.5], ["2026-06-17", 1958.0], ["2026-06-23", 1962.6], ["2026-06-27", 1962.5]]}, "COD": {"name": "DR Congo", "group": "K", "pts": [["2026-06-11", 1738.5], ["2026-06-17", 1753.0], ["2026-06-23", 1746.1], ["2026-06-27", 1762.6]]}, "UZB": {"name": "Uzbekistan", "group": "K", "pts": [["2026-06-11", 1708.8], ["2026-06-17", 1703.6], ["2026-06-23", 1699.0], ["2026-06-27", 1682.4]]}, "COL": {"name": "Colombia", "group": "K", "pts": [["2026-06-11", 1948.9], ["2026-06-17", 1954.1], ["2026-06-23", 1961.1], ["2026-06-27", 1961.2]]}, "ENG": {"name": "England", "group": "L", "pts": [["2026-06-11", 2030.5], ["2026-06-17", 2039.8], ["2026-06-23", 2021.8], ["2026-06-27", 2024.5]]}, "CRO": {"name": "Croatia", "group": "L", "pts": [["2026-06-11", 1872.0], ["2026-06-17", 1862.7], ["2026-06-23", 1872.7], ["2026-06-27", 1882.1]]}, "GHA": {"name": "Ghana", "group": "L", "pts": [["2026-06-11", 1674.0], ["2026-06-17", 1698.8], ["2026-06-23", 1716.7], ["2026-06-27", 1707.3]]}, "PAN": {"name": "Panama", "group": "L", "pts": [["2026-06-11", 1740.1], ["2026-06-17", 1715.3], ["2026-06-23", 1705.4], ["2026-06-27", 1702.8]]}};  // {code: {name, group, pts: [[date, elo], ...]}}
 
 (function () {
   // ── Shared state ──────────────────────────────────────────────────────────
@@ -700,7 +731,7 @@ const BRACKET = {"73": {"home_top": [{"code": "RSA", "name": "South Africa", "pr
     if (el) el.classList.add("active");
   }
 
-  const ALL_VIEWS = ["main-view", "team-view", "groups-view", "group-view", "games-view", "bracket-view"];
+  const ALL_VIEWS = ["main-view", "team-view", "groups-view", "group-view", "games-view", "bracket-view", "elo-view"];
   function hideAll() { ALL_VIEWS.forEach(id => document.getElementById(id).style.display = "none"); }
 
   function route() {
@@ -709,6 +740,8 @@ const BRACKET = {"73": {"home_top": [{"code": "RSA", "name": "South Africa", "pr
       showGames();
     } else if (hash === "bracket") {
       showBracket();
+    } else if (hash === "elo") {
+      showElo();
     } else if (hash === "groups") {
       showGroupsIndex();
     } else if (hash.startsWith("group-")) {
@@ -765,6 +798,133 @@ const BRACKET = {"73": {"home_top": [{"code": "RSA", "name": "South Africa", "pr
     document.title = "Bracket – WC2026 Simulator";
     renderBracket();
     window.scrollTo(0, 0);
+  }
+
+  function showElo() {
+    hideAll();
+    document.getElementById("elo-view").style.display = "";
+    setNavActive("nav-elo");
+    document.title = "Elo over time – WC2026 Simulator";
+    renderEloChart();
+    window.scrollTo(0, 0);
+  }
+
+  function renderEloChart() {
+    const NS = "http://www.w3.org/2000/svg";
+    const W = 960, H = 520, M = { l: 48, r: 56, t: 16, b: 40 };
+    const codes = Object.keys(ELO_HISTORY);
+    if (!codes.length) return;
+
+    // Domains
+    const parse = d => new Date(d + "T00:00:00Z").getTime();
+    let minT = Infinity, maxT = -Infinity, minE = Infinity, maxE = -Infinity;
+    codes.forEach(c => ELO_HISTORY[c].pts.forEach(([d, e]) => {
+      const t = parse(d);
+      if (t < minT) minT = t; if (t > maxT) maxT = t;
+      if (e < minE) minE = e; if (e > maxE) maxE = e;
+    }));
+    minE = Math.floor((minE - 10) / 10) * 10;
+    maxE = Math.ceil((maxE + 10) / 10) * 10;
+    const xOf = t => M.l + (maxT === minT ? 0 : (t - minT) / (maxT - minT)) * (W - M.l - M.r);
+    const yOf = e => M.t + (1 - (e - minE) / (maxE - minE)) * (H - M.t - M.b);
+
+    const svg = document.getElementById("elo-chart");
+    svg.innerHTML = "";
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+    const mk = (tag, attrs, text) => {
+      const el = document.createElementNS(NS, tag);
+      for (const k in attrs) el.setAttribute(k, attrs[k]);
+      if (text != null) el.textContent = text;
+      return el;
+    };
+
+    // Y gridlines + labels (Elo)
+    const ySteps = 5;
+    for (let i = 0; i <= ySteps; i++) {
+      const e = minE + (maxE - minE) * i / ySteps;
+      const y = yOf(e);
+      svg.appendChild(mk("line", { x1: M.l, y1: y, x2: W - M.r, y2: y, stroke: "#30363d", "stroke-width": 1 }));
+      svg.appendChild(mk("text", { x: M.l - 8, y: y + 4, "text-anchor": "end", fill: "#8b949e", "font-size": 11 }, Math.round(e)));
+    }
+    // X ticks + labels (dates)
+    const allDates = [...new Set(codes.flatMap(c => ELO_HISTORY[c].pts.map(p => p[0])))].sort();
+    const fmt = d => { const dt = new Date(d + "T00:00:00Z"); return dt.toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" }); };
+    allDates.forEach(d => {
+      const x = xOf(parse(d));
+      svg.appendChild(mk("line", { x1: x, y1: M.t, x2: x, y2: H - M.b, stroke: "#21262d", "stroke-width": 1 }));
+      svg.appendChild(mk("text", { x: x, y: H - M.b + 16, "text-anchor": "middle", fill: "#8b949e", "font-size": 10 }, fmt(d)));
+    });
+
+    // One polyline per team
+    const color = i => `hsl(${Math.round(i / codes.length * 360)}, 65%, 55%)`;
+    const byFinal = codes.slice().sort((a, b) =>
+      ELO_HISTORY[b].pts[ELO_HISTORY[b].pts.length - 1][1] - ELO_HISTORY[a].pts[ELO_HISTORY[a].pts.length - 1][1]);
+    const colorOf = {};
+    byFinal.forEach((c, i) => { colorOf[c] = color(i); });
+
+    const lineEls = {}, endLabelEls = {};
+    byFinal.forEach(c => {
+      const pts = ELO_HISTORY[c].pts.map(([d, e]) => `${xOf(parse(d))},${yOf(e)}`).join(" ");
+      const pl = mk("polyline", {
+        points: pts, fill: "none", stroke: colorOf[c], "stroke-width": 1.5,
+        "stroke-opacity": 0.55, "data-code": c, class: "elo-line",
+        "stroke-linejoin": "round", "stroke-linecap": "round",
+      });
+      svg.appendChild(pl);
+      lineEls[c] = pl;
+    });
+
+    // End labels (hidden until highlight)
+    byFinal.forEach(c => {
+      const last = ELO_HISTORY[c].pts[ELO_HISTORY[c].pts.length - 1];
+      const lbl = mk("text", {
+        x: xOf(parse(last[0])) + 4, y: yOf(last[1]) + 3, fill: colorOf[c],
+        "font-size": 10, "font-weight": 600, opacity: 0,
+      }, c);
+      svg.appendChild(lbl);
+      endLabelEls[c] = lbl;
+    });
+
+    // Legend
+    const legend = document.getElementById("elo-legend");
+    legend.innerHTML = "";
+    byFinal.forEach(c => {
+      const h = ELO_HISTORY[c];
+      const last = h.pts[h.pts.length - 1][1];
+      const chip = document.createElement("span");
+      chip.className = "elo-chip";
+      chip.dataset.code = c;
+      chip.innerHTML = `<span class="elo-sw" style="background:${colorOf[c]}"></span>`
+        + `<a class="team-link" href="#${c}">${c}</a> <span class="elo-val">${last.toFixed(0)}</span>`;
+      legend.appendChild(chip);
+    });
+
+    function highlight(code) {
+      byFinal.forEach(c => {
+        const on = c === code;
+        lineEls[c].setAttribute("stroke-opacity", on ? 1 : 0.08);
+        lineEls[c].setAttribute("stroke-width", on ? 2.5 : 1.5);
+        endLabelEls[c].setAttribute("opacity", on ? 1 : 0);
+        if (on) svg.appendChild(lineEls[c]);  // raise to front
+      });
+    }
+    function reset() {
+      byFinal.forEach(c => {
+        lineEls[c].setAttribute("stroke-opacity", 0.55);
+        lineEls[c].setAttribute("stroke-width", 1.5);
+        endLabelEls[c].setAttribute("opacity", 0);
+      });
+    }
+    byFinal.forEach(c => {
+      lineEls[c].addEventListener("mouseenter", () => highlight(c));
+      lineEls[c].addEventListener("mouseleave", reset);
+    });
+    legend.querySelectorAll(".elo-chip").forEach(chip => {
+      chip.addEventListener("mouseenter", () => highlight(chip.dataset.code));
+      chip.addEventListener("mouseleave", reset);
+    });
   }
 
   function renderBracket() {
